@@ -26,3 +26,6 @@ Generate MSDF with:
 ```shell
 npx msdf-bmfont -reuse -m 1024,1024 -f json -o public/assets/font/msdf.png -s 32 -r 4 -p 1 -t msdf public/assets/font/Corben-Regular.ttf
 ```
+
+
+NOTE: If you change `-r`, you'll need to update the shader.
