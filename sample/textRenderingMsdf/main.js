@@ -6474,8 +6474,8 @@ function getTransformationMatrix() {
 const referenceElement = document.getElementById('reference');
 function updateReferenceElement() {
     // Calculate CSS transform
-    const scale = pixelScale * 128; // Reverse the pixel scaling for visual parity
-    const translateX = (globalTranslation[0] * canvas.clientWidth) / 5 + 450;
+    const scale = pixelScale * 128 * 2.5; // Reverse the pixel scaling for visual parity
+    const translateX = (globalTranslation[0] * canvas.clientWidth) / 3 + 150;
     const translateY = (-globalTranslation[1] * canvas.clientHeight) / 5 + 450;
     // Apply CSS transforms to the reference element
     referenceElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
