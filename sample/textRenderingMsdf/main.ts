@@ -1,16 +1,8 @@
 import { mat4, vec3 } from 'wgpu-matrix';
 
-import {
-  cubeVertexArray,
-  cubeVertexSize,
-  cubeUVOffset,
-  cubePositionOffset,
-  cubeVertexCount,
-} from '../../meshes/cube';
+import { cubeVertexArray } from '../../meshes/cube';
 import { MsdfTextRenderer } from './msdfText';
 
-import basicVertWGSL from '../../shaders/basic.vert.wgsl';
-import vertexPositionColorWGSL from '../../shaders/vertexPositionColor.frag.wgsl';
 import { quitIfWebGPUNotAvailable } from '../util';
 
 const canvas = document.querySelector('canvas') as HTMLCanvasElement;
@@ -37,10 +29,7 @@ const textRenderer = new MsdfTextRenderer(
   depthFormat
 );
 const font = await textRenderer.createFont(
-  new URL(
-    '../../assets/font/Corben-Regular.json',
-    import.meta.url
-  ).toString()
+  new URL('../../assets/font/Corben-Regular.json', import.meta.url).toString()
 );
 
 function getTextTransform(
@@ -76,9 +65,7 @@ const titleText = textRenderer.formatText(font, `a`, {
   pixelScale: 1 / 128,
 });
 
-const text = [
-  titleText,
-];
+const text = [titleText];
 
 // Create a vertex buffer from the cube data.
 const verticesBuffer = device.createBuffer({
@@ -88,58 +75,6 @@ const verticesBuffer = device.createBuffer({
 });
 new Float32Array(verticesBuffer.getMappedRange()).set(cubeVertexArray);
 verticesBuffer.unmap();
-
-const pipeline = device.createRenderPipeline({
-  layout: 'auto',
-  vertex: {
-    module: device.createShaderModule({
-      code: basicVertWGSL,
-    }),
-    buffers: [
-      {
-        arrayStride: cubeVertexSize,
-        attributes: [
-          {
-            // position
-            shaderLocation: 0,
-            offset: cubePositionOffset,
-            format: 'float32x4',
-          },
-          {
-            // uv
-            shaderLocation: 1,
-            offset: cubeUVOffset,
-            format: 'float32x2',
-          },
-        ],
-      },
-    ],
-  },
-  fragment: {
-    module: device.createShaderModule({
-      code: vertexPositionColorWGSL,
-    }),
-    targets: [
-      {
-        format: presentationFormat,
-      },
-    ],
-  },
-  primitive: {
-    // Backface culling since the cube is solid piece of geometry.
-    // Faces pointing away from the camera will be occluded by faces
-    // pointing toward the camera.
-    cullMode: 'back',
-  },
-
-  // Enable depth testing so that the fragment closest to the camera
-  // is rendered in front.
-  depthStencil: {
-    depthWriteEnabled: true,
-    depthCompare: 'less',
-    format: depthFormat,
-  },
-});
 
 const depthTexture = device.createTexture({
   size: [canvas.width, canvas.height],
@@ -151,18 +86,6 @@ const uniformBufferSize = 4 * 16; // 4x4 matrix
 const uniformBuffer = device.createBuffer({
   size: uniformBufferSize,
   usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-});
-
-const uniformBindGroup = device.createBindGroup({
-  layout: pipeline.getBindGroupLayout(0),
-  entries: [
-    {
-      binding: 0,
-      resource: {
-        buffer: uniformBuffer,
-      },
-    },
-  ],
 });
 
 const renderPassDescriptor: GPURenderPassDescriptor = {
@@ -188,7 +111,6 @@ const aspect = canvas.width / canvas.height;
 const projectionMatrix = mat4.perspective((2 * Math.PI) / 5, aspect, 1, 100.0);
 const modelViewProjectionMatrix = mat4.create();
 
-const start = Date.now();
 function frame() {
   const transformationMatrix = getTransformationMatrix();
   device.queue.writeBuffer(
@@ -225,7 +147,7 @@ canvas.addEventListener('wheel', (e) => {
 });
 
 // Global translation variable
-let globalTranslation = vec3.create();
+const globalTranslation = vec3.create();
 let isDragging = false;
 let lastMousePosition = { x: 0, y: 0 };
 
@@ -301,17 +223,15 @@ function getTransformationMatrix() {
   return modelViewProjectionMatrix;
 }
 
-const referenceElement = document.getElementById("reference");
+const referenceElement = document.getElementById('reference');
 
 function updateReferenceElement() {
   // Calculate CSS transform
   const scale = pixelScale * 128; // Reverse the pixel scaling for visual parity
-  const translateX = (globalTranslation[0] * canvas.clientWidth / 5 + 450);
-  const translateY = (-globalTranslation[1] * canvas.clientHeight / 5 + 450);
+  const translateX = (globalTranslation[0] * canvas.clientWidth) / 5 + 450;
+  const translateY = (-globalTranslation[1] * canvas.clientHeight) / 5 + 450;
 
   // Apply CSS transforms to the reference element
   referenceElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-  referenceElement.style.transformOrigin = "center center";
+  referenceElement.style.transformOrigin = 'center center';
 }
-
-
