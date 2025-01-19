@@ -24,8 +24,8 @@ requires an installation of [Node.js](https://nodejs.org/en/).
 Generate MSDF with:
 
 ```shell
-npx msdf-bmfont -reuse -m 1024,1024 -f json -o public/assets/font/msdf.png -s 32 -r 4 -p 1 -t msdf public/assets/font/Corben-Regular.ttf
+./node_modules/.bin/msdf-bmfont -reuse -m 1024,1024 -f json -o public/assets/font/msdf.png -s 64 -r 4 -p 1 -t msdf public/assets/font/Corben-Regular.ttf
 ```
 
 
-NOTE: If you change `-r`, you'll need to update the shader.
+NOTE: If you change `-r`, you'll need to update the shader. Also note that this uses an adjusted `msdf-bmfont` with up-to-date MSDF binary.

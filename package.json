@@ -30,7 +30,7 @@
     "showdown": "^2.1.0",
     "stats.js": "github:mrdoob/stats.js#b235d9c",
     "teapot": "^1.0.0",
-    "msdf-bmfont-xml": "^2.7.0",
+    "msdf-bmfont-xml": "github:taj-p/MSDF-BMFont-XML#1d04770298bc08d87e1281ce924c5f3a3099b8bb",
     "wgpu-matrix": "^3.3.0"
   },
   "devDependencies": {
