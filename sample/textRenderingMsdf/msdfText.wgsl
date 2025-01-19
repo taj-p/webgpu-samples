@@ -65,7 +65,7 @@ fn sampleMsdf(texcoord: vec2f) -> f32 {
 fn fragmentMain(input : VertexOutput) -> @location(0) vec4f {
   // pxRange (AKA distanceRange) comes from the msdfgen tool. Don McCurdy's tool
   // uses the default which is 4.
-  let pxRange = 4.0;
+  let pxRange = 8.0;
   let sz = vec2f(textureDimensions(fontTexture, 0));
   let dx = sz.x*length(vec2f(dpdxFine(input.texcoord.x), dpdyFine(input.texcoord.x)));
   let dy = sz.y*length(vec2f(dpdxFine(input.texcoord.y), dpdyFine(input.texcoord.y)));

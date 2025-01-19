@@ -38,7 +38,7 @@ const textRenderer = new MsdfTextRenderer(
 );
 const font = await textRenderer.createFont(
   new URL(
-    '../../assets/font/ya-hei-ascii-msdf.json',
+    '../../assets/font/Corben-Regular.json',
     import.meta.url
   ).toString()
 );
@@ -63,86 +63,21 @@ function getTextTransform(
 }
 
 const textTransforms = [
-  getTextTransform([0, 0, 1.1]),
-  getTextTransform([0, 0, -1.1], [0, Math.PI, 0]),
-  getTextTransform([1.1, 0, 0], [0, Math.PI / 2, 0]),
-  getTextTransform([-1.1, 0, 0], [0, -Math.PI / 2, 0]),
-  getTextTransform([0, 1.1, 0], [-Math.PI / 2, 0, 0]),
-  getTextTransform([0, -1.1, 0], [Math.PI / 2, 0, 0]),
+  // getTextTransform([0, 0, 1.1]),
+  // getTextTransform([0, 0, -1.1], [0, Math.PI, 0]),
+  // getTextTransform([1.1, 0, 0], [0, Math.PI / 2, 0]),
+  // getTextTransform([-1.1, 0, 0], [0, -Math.PI / 2, 0]),
+  getTextTransform([0, 0, 0]),
+  // getTextTransform([0, -1.1, 0], [Math.PI / 2, 0, 0]),
 ];
 
-const titleText = textRenderer.formatText(font, `WebGPU`, {
+const titleText = textRenderer.formatText(font, `a`, {
   centered: true,
   pixelScale: 1 / 128,
 });
-const largeText = textRenderer.formatText(
-  font,
-  `
-WebGPU exposes an API for performing operations, such as rendering
-and computation, on a Graphics Processing Unit.
-
-Graphics Processing Units, or GPUs for short, have been essential
-in enabling rich rendering and computational applications in personal
-computing. WebGPU is an API that exposes the capabilities of GPU
-hardware for the Web. The API is designed from the ground up to
-efficiently map to (post-2014) native GPU APIs. WebGPU is not related
-to WebGL and does not explicitly target OpenGL ES.
-
-WebGPU sees physical GPU hardware as GPUAdapters. It provides a
-connection to an adapter via GPUDevice, which manages resources, and
-the device’s GPUQueues, which execute commands. GPUDevice may have
-its own memory with high-speed access to the processing units.
-GPUBuffer and GPUTexture are the physical resources backed by GPU
-memory. GPUCommandBuffer and GPURenderBundle are containers for
-user-recorded commands. GPUShaderModule contains shader code. The
-other resources, such as GPUSampler or GPUBindGroup, configure the
-way physical resources are used by the GPU.
-
-GPUs execute commands encoded in GPUCommandBuffers by feeding data
-through a pipeline, which is a mix of fixed-function and programmable
-stages. Programmable stages execute shaders, which are special
-programs designed to run on GPU hardware. Most of the state of a
-pipeline is defined by a GPURenderPipeline or a GPUComputePipeline
-object. The state not included in these pipeline objects is set
-during encoding with commands, such as beginRenderPass() or
-setBlendConstant().`,
-  { pixelScale: 1 / 256 }
-);
 
 const text = [
-  textRenderer.formatText(font, 'Front', {
-    centered: true,
-    pixelScale: 1 / 128,
-    color: [1, 0, 0, 1],
-  }),
-  textRenderer.formatText(font, 'Back', {
-    centered: true,
-    pixelScale: 1 / 128,
-    color: [0, 1, 1, 1],
-  }),
-  textRenderer.formatText(font, 'Right', {
-    centered: true,
-    pixelScale: 1 / 128,
-    color: [0, 1, 0, 1],
-  }),
-  textRenderer.formatText(font, 'Left', {
-    centered: true,
-    pixelScale: 1 / 128,
-    color: [1, 0, 1, 1],
-  }),
-  textRenderer.formatText(font, 'Top', {
-    centered: true,
-    pixelScale: 1 / 128,
-    color: [0, 0, 1, 1],
-  }),
-  textRenderer.formatText(font, 'Bottom', {
-    centered: true,
-    pixelScale: 1 / 128,
-    color: [1, 1, 0, 1],
-  }),
-
   titleText,
-  largeText,
 ];
 
 // Create a vertex buffer from the cube data.
@@ -254,6 +189,78 @@ const projectionMatrix = mat4.perspective((2 * Math.PI) / 5, aspect, 1, 100.0);
 const modelViewProjectionMatrix = mat4.create();
 
 const start = Date.now();
+function frame() {
+  const transformationMatrix = getTransformationMatrix();
+  device.queue.writeBuffer(
+    uniformBuffer,
+    0,
+    transformationMatrix.buffer,
+    transformationMatrix.byteOffset,
+    transformationMatrix.byteLength
+  );
+  renderPassDescriptor.colorAttachments[0].view = context
+    .getCurrentTexture()
+    .createView();
+
+  const commandEncoder = device.createCommandEncoder();
+  const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+
+  textRenderer.render(passEncoder, ...text);
+
+  passEncoder.end();
+  device.queue.submit([commandEncoder.finish()]);
+
+  // requestAnimationFrame(frame);
+  updateReferenceElement();
+}
+requestAnimationFrame(frame);
+
+// On wheel, increase/decrease the pixel scale of text[0]
+let pixelScale = 1 / 128;
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  pixelScale -= e.deltaY / 1000;
+  text[0].setPixelScale(pixelScale);
+  frame();
+});
+
+// Global translation variable
+let globalTranslation = vec3.create();
+let isDragging = false;
+let lastMousePosition = { x: 0, y: 0 };
+
+// Mouse events for dragging
+canvas.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  lastMousePosition = { x: e.clientX, y: e.clientY };
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  if (!isDragging) return;
+
+  const deltaX = e.clientX - lastMousePosition.x;
+  const deltaY = e.clientY - lastMousePosition.y;
+
+  // Update the translation values (scale movement for better control)
+  const scaleFactor = 0.01;
+  globalTranslation[0] += deltaX * scaleFactor;
+  globalTranslation[1] -= deltaY * scaleFactor;
+
+  lastMousePosition = { x: e.clientX, y: e.clientY };
+
+  // Trigger rendering update
+  frame();
+});
+
+canvas.addEventListener('mouseup', () => {
+  isDragging = false;
+});
+
+canvas.addEventListener('mouseleave', () => {
+  isDragging = false;
+});
+
+// Updated getTransformationMatrix
 function getTransformationMatrix() {
   const now = Date.now() / 5000;
   const viewMatrix = mat4.identity();
@@ -286,43 +293,25 @@ function getTransformationMatrix() {
     text[index].setTransform(textMatrix);
   }
 
-  // Update the transform of the larger block of text
-  const crawl = ((Date.now() - start) / 2500) % 14;
+  // Update the transform of the title text with global translation
   mat4.identity(textMatrix);
-  mat4.rotateX(textMatrix, -Math.PI / 8, textMatrix);
-  mat4.translate(textMatrix, [0, crawl - 3, 0], textMatrix);
+  mat4.translate(textMatrix, globalTranslation, textMatrix);
   titleText.setTransform(textMatrix);
-  mat4.translate(textMatrix, [-3, -0.1, 0], textMatrix);
-  largeText.setTransform(textMatrix);
 
   return modelViewProjectionMatrix;
 }
 
-function frame() {
-  const transformationMatrix = getTransformationMatrix();
-  device.queue.writeBuffer(
-    uniformBuffer,
-    0,
-    transformationMatrix.buffer,
-    transformationMatrix.byteOffset,
-    transformationMatrix.byteLength
-  );
-  renderPassDescriptor.colorAttachments[0].view = context
-    .getCurrentTexture()
-    .createView();
+const referenceElement = document.getElementById("reference");
 
-  const commandEncoder = device.createCommandEncoder();
-  const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
-  passEncoder.setPipeline(pipeline);
-  passEncoder.setBindGroup(0, uniformBindGroup);
-  passEncoder.setVertexBuffer(0, verticesBuffer);
-  passEncoder.draw(cubeVertexCount, 1, 0, 0);
+function updateReferenceElement() {
+  // Calculate CSS transform
+  const scale = pixelScale * 128; // Reverse the pixel scaling for visual parity
+  const translateX = (globalTranslation[0] * canvas.clientWidth / 5 + 450);
+  const translateY = (-globalTranslation[1] * canvas.clientHeight / 5 + 450);
 
-  textRenderer.render(passEncoder, ...text);
-
-  passEncoder.end();
-  device.queue.submit([commandEncoder.finish()]);
-
-  requestAnimationFrame(frame);
+  // Apply CSS transforms to the reference element
+  referenceElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+  referenceElement.style.transformOrigin = "center center";
 }
-requestAnimationFrame(frame);
+
+

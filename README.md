@@ -17,3 +17,12 @@ requires an installation of [Node.js](https://nodejs.org/en/).
   sources: `npm start`. You can navigate to http://localhost:8080 to view the project.
 - For production, compile the project: `npm run build`.
 - To run a production server to serve the built assets, do `npm run serve`.
+
+
+## MSDF
+
+Generate MSDF with:
+
+```shell
+npx msdf-bmfont -reuse -m 1024,1024 -f json -o public/assets/font/msdf.png -s 32 -r 4 -p 1 -t msdf public/assets/font/Corben-Regular.ttf
+```
